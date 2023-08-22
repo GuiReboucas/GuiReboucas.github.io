@@ -2,11 +2,16 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-{{ $styles := resources.Get "css/main.css" | postCSS }}
+{{ $time := now.Format "02-01-2006" }}
+{{ $styles := resources.Get "css/styles.scss"
+    | toCSS
+    | postCSS (dict "config" "postcss.config.js")
+    | resources.ExecuteAsTemplate (printf "styles.%s.css" $time) $time
+}}
 
 {{ if .Site.IsServer }}
-  <link rel="stylesheet" href="{{ $styles.RelPermalink }}"/>
+  <link rel="stylesheet" href="{{ $styles.RelPermalink }}">
 {{ else }}
-  {{ $styles := $styles | minify | resources.PostProcess }}
-  <link rel="stylesheet" href=".{{ $styles.RelPermalink }}" />
+  {{ $styles := $styles | minify | fingerprint | resources.PostCSS }}
+  <link rel="stylesheet" href=".{{ $styles.RelPermalink }}">
 {{ end }}
